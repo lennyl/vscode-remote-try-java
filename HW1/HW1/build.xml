@@ -1,77 +1,92 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="PrimeGenerator" default="run-tests">
-<!--  Define properties  -->
-<property name="ex.dir" value="."/>
-<property name="main.class" value="PrimeGenerator"/>
-<property name="ivy.cache.dir" value="${user.home}/.ivy2/cache"/>
-<property name="ivy.jar.dir" value="${user.home}/.ivy2/jars"/>
+<project name="FileSystemComponent" default="run-tests" xmlns:ivy="antlib:org.apache.ivy.ant">
 
-<!--  Ivy settings  -->
-<ivy:settings file="${ex.dir}/ivysettings.xml"/>
-<!--  Ivy resolve target  -->
-<target name="resolve">
-<ivy:resolve/>
-<ivy:cachepath pathid="classpath"/>
-</target>
+    <!-- Define properties -->
+    <property name="ex.dir" value="." />
+    <property name="main.class" value="FileSystemTest" /> <!-- Changed the main class to FileSystemTest -->
 
-<!--  Initialization Target  -->
-<target name="init" depends="resolve">
-<mkdir dir="${ex.dir}/build/main"/>
-<mkdir dir="${ex.dir}/build/test"/>
-<echo message="Initialization complete"/>
-</target>
+    <!-- Ivy settings -->
+    <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ex.dir}/lib/apache-ant-1.10.14/lib/ivy-2.5.2.jar" />
+    <ivy:settings file="${ex.dir}/ivysettings.xml" />
 
-<!--  Compile main task  -->
-<target name="compile-main" depends="init">
-<javac srcdir="${ex.dir}/src/main" destdir="${ex.dir}/build/main" classpathref="classpath" includeantruntime="false"/>
-<echo message="Main compilation complete"/>
-</target>
+    <!-- Ivy resolve target -->
+    <target name="resolve">
+        <ivy:resolve />
+        <ivy:cachepath pathid="classpath" />
+    </target>
 
-<!--  Compile test task  -->
-<target name="compile-test" depends="init">
-<javac srcdir="${ex.dir}/src/test" destdir="${ex.dir}/build/test" classpathref="classpath" includeantruntime="false"/>
-<echo message="Test compilation complete"/>
-</target>
+    <!-- Initialization Target -->
+    <target name="init" depends="resolve">
+        <mkdir dir="${ex.dir}/build/main" />
+        <mkdir dir="${ex.dir}/build/test" />
+        <echo message="Initialization complete"/>
+    </target>
 
-<!--  Run test cases in PrimeGeneratorTest  -->
-<target name="run-tests" depends="compile-test">
+    <!-- Compile main task -->
+    <target name="compile-main" depends="init">
+        <javac srcdir="${ex.dir}/src/main" destdir="${ex.dir}/build/main" classpathref="classpath" includeantruntime="false" />
+        <echo message="Main compilation complete"/>
+    </target>
 
-<java classname="PrimeGeneratorTest" classpath="${ex.dir}/build/test" fork="true"/>
-</target>
-<!--  Clean task  -->
-<target name="clean">
-<delete dir="${ex.dir}/build"/>
-<delete file="${ex.dir}/ex2-main.jar"/>
-<delete file="${ex.dir}/ex2-test.jar"/>
-<echo message="Cleaned build directory"/>
-</target>
+    <!-- Compile test task -->
+    <target name="compile-test" depends="compile-main">
+        <javac srcdir="${ex.dir}/src/test" destdir="${ex.dir}/build/test" classpathref="classpath" includeantruntime="false">
+            <classpath>
+                <pathelement path="${ex.dir}/build/main" />
+            </classpath>
+        </javac>
+        <echo message="Test compilation complete"/>
+    </target>
 
-<!--  Build task (main)  -->
-<target name="build-main" depends="compile-main">
-<jar destfile="${ex.dir}/ex2-main.jar" basedir="${ex.dir}/build/main">
-<manifest>
-<attribute name="Main-Class" value="${main.class}"/>
-</manifest>
-</jar>
-<echo message="Main JAR built successfully"/>
-</target>
+    <!-- Run test cases (test methods) in FileSystemTest -->
+    <target name="run-tests" depends="compile-test">
+        <junitlauncher haltonfailure="true" printsummary="true">
+            <classpath>
+                <path refid="classpath" />
+                <pathelement path="${ex.dir}/build/main" />
+                <pathelement path="${ex.dir}/build/test" />
+            </classpath>
+            <testclasses outputdir="${ex.dir}/build/test/results">
+                <fileset dir="${ex.dir}/build/test">
+                    <include name="**/*Test.class" />
+                </fileset>
+            </testclasses>
+        </junitlauncher>
+    </target>
 
-<!--  Build task (test)  -->
-<target name="build-test" depends="compile-test">
-<jar destfile="${ex.dir}/ex2-test.jar" basedir="${ex.dir}/build/test">
-<manifest>
-<attribute name="Main-Class" value="${main.class}"/>
-</manifest>
-</jar>
-<echo message="Test JAR built successfully"/>
-</target>
+    <!-- Clean task -->
+    <target name="clean">
+        <delete dir="${ex.dir}/build" />
+        <echo message="Cleaned build directory"/>
+    </target>
 
-<!--  Default build task  -->
-<target name="build" depends="build-main, build-test">
-<echo message="Build complete"/>
-</target>
+    <!-- Build task (main) -->
+    <target name="build-main" depends="compile-main">
+        <jar destfile="${ex.dir}/ex2-main.jar" basedir="${ex.dir}/build/main">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}" />
+            </manifest>
+        </jar>
+        <echo message="Main JAR built successfully"/>
+    </target>
 
-<!--  Compile target  -->
-<target name="compile" depends="compile-main, compile-test">
-<echo message="Compilation complete"/>
-</target>
+    <!-- Build task (test) -->
+    <target name="build-test" depends="compile-test">
+        <jar destfile="${ex.dir}/ex2-test.jar" basedir="${ex.dir}/build/test">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}" />
+            </manifest>
+        </jar>
+        <echo message="Test JAR built successfully"/>
+    </target>
+
+    <!-- Default build task -->
+    <target name="build" depends="build-main, build-test">
+        <echo message="Build complete"/>
+    </target>
+
+    <!-- Compile target -->
+    <target name="compile" depends="compile-main, compile-test">
+        <echo message="Compilation complete"/>
+    </target>
+
 </project>
